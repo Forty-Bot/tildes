@@ -137,14 +137,7 @@ def post_group_topics(
     raise HTTPFound(location=new_topic.permalink)
 
 
-# Redirect home to group, not preserving any additional information as yet
-@view_config(route_name="home")
-def redirect_to_group(request: Request) -> HTTPFound:  # noqa
-    """Redirect incoming request to /~themotte."""
-    raise HTTPFound(location="/~themotte")
-
-
-# @view_config(route_name="home", renderer="home.jinja2")
+@view_config(route_name="home", renderer="home.jinja2")
 @view_config(route_name="group", renderer="topic_listing.jinja2")
 @use_kwargs(TopicListingSchema())
 def get_group_topics(  # noqa
@@ -321,14 +314,7 @@ def get_group_topics(  # noqa
     }
 
 
-# Redirect search to group, not preserving any additional information as yet
-@view_config(route_name="search")
-def redirect_to_group_search(request: Request) -> HTTPFound:  # noqa
-    """Redirect incoming request to /~themotte/search."""
-    raise HTTPFound(location="/~themotte/search")
-
-
-# @view_config(route_name="search", renderer="search.jinja2")
+@view_config(route_name="search", renderer="search.jinja2")
 @view_config(route_name="group_search", renderer="search.jinja2")
 @use_kwargs(TopicListingSchema(only=("after", "before", "order", "per_page", "period")))
 @use_kwargs({"search": String(data_key="q", missing="")})
