@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # This is a (heavily) reduced version of Vagrant's plugins/provisioners/salt/provisioner.rb
+      - name: Bootstrap salt
+        run: |
+          sudo adduser --gecos vagrant --disabled-password vagrant
+          sudo rsync -vaL --chown vagrant:vagrant tildes/ /opt/tildes/
+          sudo rsync -vaL --chown vagrant:vagrant salt/salt/ /srv/salt/
+          sudo rsync -vaL --chown vagrant:vagrant salt/pillar/ /srv/pillar/
+          cp -a salt/minion /tmp/minion
+          curl -LO https://raw.githubusercontent.com/saltstack/salt-bootstrap/stable/bootstrap-salt.sh
+          sudo sh bootstrap-salt.sh -F -c /tmp stable 3000
+          sudo salt-call state.highstate --retcode-passthrough --local --log-level=info
+
+      - if: always()
+        run: journalctl -u nginx
+
+      - name: Run tests
+        run: |
+          . activate && pytest
+          . activate && mypy .
+          . activate && black --check .
+          . activate && prospector
+          . activate && npm run lint
